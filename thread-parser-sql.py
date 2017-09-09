@@ -181,11 +181,13 @@ def synch_post_content (post):
         br.tail = "\n" + br.tail if br.tail else "\n"
     post_content = post_content[0].text_content()
     # Чистим пост от цитат и ссылок на другие посты (Так себе идея):
-    post_content = ''.join(re.sub('>>([0-9]+)', '', str(post_content)))
-    post_content = ''.join(re.sub('>[^0-9]+', '', str(post_content)))
+    post_content = ''.join(re.sub('>>([0-9]+)', '',post_content))
+    post_content = ''.join(re.sub('>[^0-9]+', '',post_content))
     # Очищает пост от включений url:
-    post_content = ''.join(re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', str(post_content)))
-    if post_content:
+    post_content = ''.join(re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '',post_content))
+    # Криво-косо убираем пустые посты (а нужно сделать чисту пустых строк)
+    post_test = ''.join(re.sub('\n', '',post_content))
+    if post_test:
         return post_content
 
 def synch_post_urls (post):
@@ -267,16 +269,16 @@ def synch_thread_sqlite (database_name, metadict_thread):
         thread_number = int(post_dict["thread_number"])
         thread_post_number = int(post_dict["thread_post_number"])
         post_datetime = int(post_dict["post_datetime"])
-        post_theme = str(post_dict["post_theme"])
-        post_email = str(post_dict["post_email"])
-        post_name = str(post_dict["post_name"])
-        post_trip = str(post_dict["post_trip"])
-        post_file_name = str(post_dict["post_file_name"])
-        post_file_link = str(post_dict["post_file_link"])
-        post_file_prev = str(post_dict["post_file_prev"])
-        post_youtube_video = str(post_dict["post_youtube_video"])
-        post_youtube_image = str(post_dict["post_youtube_image"])
-        post_content = str(post_dict["post_content"])
+        post_theme = post_dict["post_theme"]
+        post_email = post_dict["post_email"]
+        post_name = post_dict["post_name"]
+        post_trip = post_dict["post_trip"]
+        post_file_name = post_dict["post_file_name"]
+        post_file_link = post_dict["post_file_link"]
+        post_file_prev = post_dict["post_file_prev"]
+        post_youtube_video = post_dict["post_youtube_video"]
+        post_youtube_image = post_dict["post_youtube_image"]
+        post_content = post_dict["post_content"]
         if post_dict["post_citation"]:
             post_citation = str(' '.join(post_dict["post_citation"]))
         else:
