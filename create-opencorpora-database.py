@@ -44,8 +44,8 @@ def create_database (database_name, opencorpora_dir):
         # Форматирование вывода -- удобная штука (хотя ввод данных таким образом, это уязвимость): 
         #create_string = "CREATE TABLE {} (words TEXT DEFAULT NULL)".format(table_name)
         #print(create_string)
-        cursor.execute("CREATE TABLE "+table_name+" (words TEXT DEFAULT NULL)")
-        cursor.execute("CREATE INDEX index_"+table_name+" ON "+table_name+" (words)")
+        cursor.execute("CREATE TABLE IF NOT EXISTS "+table_name+" (words TEXT DEFAULT NULL)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS index_"+table_name+" ON "+table_name+" (words)")
     database.close()
     print("[OK] CREATE",database_name)
 

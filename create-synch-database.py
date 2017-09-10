@@ -36,7 +36,7 @@ def create_synch_database (database_name):
     """База данных sqlite, таблица постов на synch."""
     database = sqlite3.connect(metadict_path(database_name))
     cursor = database.cursor()
-    cursor.execute("""CREATE TABLE posts (
+    cursor.execute("""CREATE TABLE IF NOT EXISTS posts (
         post_number INTEGER NOT NULL PRIMARY KEY UNIQUE,
         thread_number INTEGER NOT NULL,
         thread_post_number INTEGER NOT NULL,
@@ -55,7 +55,7 @@ def create_synch_database (database_name):
         post_urls TEXT DEFAULT NULL,
         post_links TEXT DEFAULT NULL
         )""")
-    cursor.execute("""CREATE INDEX index_posts ON posts (
+    cursor.execute("""CREATE INDEX IF NOT EXISTS index_posts ON posts (
         post_number,
         thread_number,
         thread_post_number,
