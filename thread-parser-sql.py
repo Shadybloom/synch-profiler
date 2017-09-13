@@ -18,6 +18,7 @@ import sqlite3
 # Опции:
 
 database_name = 'database/synch.sqlite'
+threads_dir = 'threads'
 
 #-------------------------------------------------------------------------
 # Аргументы командной строки:
@@ -41,6 +42,74 @@ def metadict_path (metadict_dir):
     # Добавляем к пути каталог словарей:
     metadict_path = script_path + '/' + metadict_dir
     return metadict_path
+
+def find_files (directory):
+    """Возвращает список путей ко всем файлам каталога, включая подкаталоги."""
+    path_f = []
+    for d, dirs, files in os.walk(directory):
+        for f in files:
+                # Формирование адреса:
+                path = os.path.join(d,f)
+                # Добавление адреса в список:
+                path_f.append(path)
+    return path_f
+
+def pathfinder (pathlist):
+    """Возвращает абсолютный путь к файлам в каталогах или к файлам в списке."""
+    filelist = [ ]
+    for file_path in pathlist:
+        if os.path.isfile(file_path):
+            filelist.append(file_path)
+        if os.path.isdir(file_path):
+            files = find_files(file_path)
+            for file in files:
+                filelist.append(file)
+    return filelist
+
+def create_synch_database (database_name):
+    """База данных sqlite, таблица постов на synch."""
+    database = sqlite3.connect(metadict_path(database_name))
+    cursor = database.cursor()
+    cursor.execute("""CREATE TABLE IF NOT EXISTS posts (
+        post_number INTEGER NOT NULL PRIMARY KEY UNIQUE,
+        thread_number INTEGER NOT NULL,
+        thread_post_number INTEGER NOT NULL,
+        post_datetime INTEGER NOT NULL,
+        post_theme TEXT DEFAULT NULL,
+        post_email TEXT DEFAULT NULL,
+        post_name TEXT DEFAULT NULL,
+        post_trip TEXT DEFAULT NULL,
+        post_file_name TEXT DEFAULT NULL,
+        post_file_link TEXT DEFAULT NULL,
+        post_file_prev TEXT DEFAULT NULL,
+        post_youtube_video TEXT DEFAULT NULL,
+        post_youtube_image TEXT DEFAULT NULL,
+        post_content TEXT DEFAULT NULL,
+        post_citation TEXT DEFAULT NULL,
+        post_urls TEXT DEFAULT NULL,
+        post_links TEXT DEFAULT NULL
+        )""")
+    cursor.execute("""CREATE INDEX IF NOT EXISTS index_posts ON posts (
+        post_number,
+        thread_number,
+        thread_post_number,
+        post_datetime,
+        post_theme,
+        post_email,
+        post_name,
+        post_trip,
+        post_file_name,
+        post_file_link,
+        post_file_prev,
+        post_youtube_video,
+        post_youtube_image,
+        post_content,
+        post_citation,
+        post_urls,
+        post_links
+        )""")
+    database.close()
+    print("[OK] CREATE",database_name)
 
 def synch_post_file_name (post):
     """Извлекаем название картинки из поста"""
@@ -230,6 +299,10 @@ def synch_thread_parser_dict (thread):
     # Проблема: картинки из оп-постов не получается вытащить (они выше тега оп-поста).
     metadict_thread = {}
     posts = thread.xpath('.//div[@class="post op" or @class="post reply row" or @class="post reply"]')
+    # Проверка, есть ли посты в треде:
+    if not posts:
+        print('Парсер не нашёл постов:', file_path)
+        return None
     thread_number = synch_post_number(posts[0])
     post_number = 0
     for post in posts:
@@ -261,8 +334,17 @@ def synch_thread_parser_dict (thread):
 
 def synch_thread_sqlite (database_name, metadict_thread):
     """Словарь треда переносится в базу данных."""
+    # Создаётся база данных, если её нет:
+    if os.path.exists(metadict_path(database_name)) is not True:
+        create_synch_database(database_name)
+    # Проверка, сработал ли парсер:
+    if not metadict_thread:
+        return None
+    # Подключается база данных:
     database = sqlite3.connect(metadict_path(database_name))
     cursor = database.cursor()
+    # Список отброшенных постов (уникальные номера не перезаписываются):
+    drop_posts = [ ]
     for post,post_dict in metadict_thread.items():
         # Обработка словаря
         post_number = int(post_dict["post_number"])
@@ -312,12 +394,12 @@ def synch_thread_sqlite (database_name, metadict_thread):
                 post_urls,\
                 post_links,\
                 ])
-        except:
-            print('Пост уже в БД:',post_number)
+        except sqlite3.IntegrityError:
+            drop_posts.append(post_number)
+    if drop_posts:
+        print('Посты уже в БД:',len(drop_posts),file_path)
     database.commit()
     database.close()
-
-
 
 #----------------------------------------------------------------------
 # Тело программы:
@@ -325,13 +407,25 @@ def synch_thread_sqlite (database_name, metadict_thread):
 # Создаётся список аргументов скрипта:
 parser = create_parser()
 namespace = parser.parse_args()
-
-# Проверяем, существует ли указанный файл:
-file_patch = ' '.join(namespace.file)
-if namespace.file is not None and os.path.exists(file_patch):
-    thread = lxml.html.parse(file_patch).getroot()
-    synch_thread_sqlite(database_name, synch_thread_parser_dict(thread))
-# Если нет, читаем стандартный ввод:
+# Проверяем, существует ли указанные файлы/файл:
+found_threads = find_files(metadict_path(threads_dir))
+# Если указаны файлы:
+if namespace.file:
+    filelist = pathfinder(namespace.file)
+    for n,file_path in enumerate(filelist,1):
+        print(n, '/', len(filelist), file_path)
+        thread = file_path
+        thread_raw = lxml.html.parse(file_path).getroot()
+        synch_thread_sqlite(database_name, synch_thread_parser_dict(thread_raw))
+# Если файла нет, берём все файлы из стандартного каталога (если он не пуст):
+elif not namespace.file and found_threads:
+    for n,file_path in enumerate(found_threads,1):
+        print(n, '/', len(found_threads), file_path)
+        thread = file_path
+        thread_raw = lxml.html.parse(file_path).getroot()
+        synch_thread_sqlite(database_name, synch_thread_parser_dict(thread_raw))
+# Если и в каталоге тредов ничего нет, читаем стандартный ввод:
 else:
+    print('Не указан файл, нет файлов в каталоге, читаем стандартный ввод')
     thread = lxml.html.fromstring(sys.stdin.read())
     synch_thread_sqlite(database_name, synch_thread_parser_dict(thread))
