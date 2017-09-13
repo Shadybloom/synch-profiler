@@ -6,19 +6,21 @@
 ## Загрузка & Компиляция
 
 Скрипты проверялись только на GNU/Linux.  
+`git clone https://github.com/Shadybloom/synch-profiler`  
 Нужен питон третьей версии, например Python 3.6.2, а также sqlite3  
 Кроме того понадобятся внешние библиотеки Python (можно установить в каталог пользователя):  
 `pip install --user beautifulsoup4 pymorphy2`  
 
 Для начала загрузим несколько пони-тредов:  
-`cd ./synch-profiler/threads ; ../pony-thread-grabber.sh https://syn-ch.com/b/res/4428023.html`  
-Создадим базу данных, таблицу постов и индекс к её ключам:  
-`cd ../synch-profiler ; ./create-synch-database.py`  
+`mkdir ./synch-profiler/threads ; cd ./synch-profiler/threads ; ../pony-thread-grabber.sh https://syn-ch.com/b/res/4428023.html`  
 Парсер разберёт треды на отдельные посты и поля в них, а затем загрузит в бд:  
-`for file in ./threads/* ; do ./thread-parser-sql.py $file ; done`  
-Работа парсера требует 1-2 секунды на тред, следить за наполнением базы данных можно так:  
-`sqlite3 ./database/synch.sqlite "SELECT COUNT(post_number) FROM posts"`
+`../thread-parser-sql.py *`  
+Теперь создаём таблицу неймфагов (когда колонка имён-трипкодов будет готова, процесс можно прервать и возобновить в любой момент):  
+`../create-namefags-table.py*`  
 
-## Использование
+## Использование & Заметки
+
+Работа парсера требует 1-2 секунды на тред, следить за наполнением базы данных можно так:  
+`sqlite3 ../database/synch.sqlite "SELECT COUNT(post_number) FROM posts"`  
 
 Если нужен графический интерфейс, рекомендую sqlitebrowser, но необходимости в нём нет — синтаксис sql прост, но даёт огромные возможности. Впрочем, об этом позже — работа ещё не завершена.  
