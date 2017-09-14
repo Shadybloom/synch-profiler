@@ -413,17 +413,17 @@ found_threads = find_files(metadict_path(threads_dir))
 if namespace.file:
     filelist = pathfinder(namespace.file)
     for n,file_path in enumerate(filelist,1):
-        print(n, '/', len(filelist), file_path)
         thread = file_path
         thread_raw = lxml.html.parse(file_path).getroot()
         synch_thread_sqlite(database_name, synch_thread_parser_dict(thread_raw))
+        print(n, '/', len(filelist), file_path)
 # Если файла нет, берём все файлы из стандартного каталога (если он не пуст):
 elif not namespace.file and found_threads:
     for n,file_path in enumerate(found_threads,1):
-        print(n, '/', len(found_threads), file_path)
         thread = file_path
         thread_raw = lxml.html.parse(file_path).getroot()
         synch_thread_sqlite(database_name, synch_thread_parser_dict(thread_raw))
+        print(n, '/', len(found_threads), file_path)
 # Если и в каталоге тредов ничего нет, читаем стандартный ввод:
 else:
     print('Не указан файл, нет файлов в каталоге, читаем стандартный ввод')
