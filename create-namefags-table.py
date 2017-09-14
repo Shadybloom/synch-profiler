@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Скрипт создаёт 
+# Скрипт создаёт таблицу неймфагов в synch.sqlite
 
 import os
 import sqlite3
@@ -36,7 +36,6 @@ def create_namelist_super_fast_pro_gleam_shady_algorithm (cursor):
                 "SELECT DISTINCT (post_name) FROM posts WHERE post_trip=?"\
                 ,(tripcode[0],)).fetchall()
         for name in trip_names:
-            #print(name[0],tripcode)
             nametuple = (name[0], tripcode[0])
             if tripcode[0] is not None:
                 namelist.append(nametuple)
@@ -83,6 +82,7 @@ def recreate_namefags_table (cursor):
     # Дропаем старую таблицу:
     cursor.execute("DROP TABLE IF EXISTS namefags")
     cursor.execute("""CREATE TABLE IF NOT EXISTS namefags (
+        number INTEGER NOT NULL PRIMARY KEY UNIQUE,
         name TEXT DEFAULT NULL,
         tripcode TEXT DEFAULT NULL,
         postcount INTEGER NULL,
@@ -90,6 +90,7 @@ def recreate_namefags_table (cursor):
         links TEXT DEFAULT NULL
         )""")
     cursor.execute("""CREATE INDEX IF NOT EXISTS index_namefags ON namefags (
+        number,
         name,
         tripcode,
         postcount,
@@ -98,9 +99,8 @@ def recreate_namefags_table (cursor):
         )""")
     # Заполняем таблицу сочетаниями имён-трипкодов (остальные значения пока что нули):
     namelist = create_namelist_super_fast_pro_gleam_shady_algorithm(cursor)
-    for nametuple in namelist:
-        print(nametuple)
-        cursor.execute("INSERT INTO namefags VALUES(?,?,NULL,NULL,NULL)", (nametuple))
+    for n,nametuple in enumerate(namelist,1):
+        cursor.execute("INSERT INTO namefags VALUES(?,?,?,NULL,NULL,NULL)", (n,nametuple[0],nametuple[1],))
     database.commit()
     print("[OK] CREATE",database_name)
 
