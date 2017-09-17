@@ -6,7 +6,6 @@
 import os
 import sqlite3
 import graphviz
-from datetime import datetime
 
 #-------------------------------------------------------------------------
 # Опции:
@@ -29,21 +28,21 @@ graph_engine = 'circo'
 #graph_engine = 'twopi'
 graph_output = 'png'
 graph_conf = {
-        'mindist':'2.5',
-        'overlap':'scale',
-        #'splines':'true',
-        #'spines':'spline',
-        #'concentrate':'true',
+        'splines':'true',
+        'spines':'spline',
+        'concentrate':'true',
+        #'overlap':'scale',
+        #'mindist':'2.5',
         }
 node_conf = {
         'shape':'circle',
         'fixedsize':'True',
-        'width':'2',
         'style':'filled',
-        'penwidth':'0.5',
+        #'penwidth':'0.5',
+        #'width':'2',
         }
 edge_conf = {
-        'arrowsize':'0.5',
+        #'arrowsize':'0.5',
         #'arrowshape':'vee',
         }
 
@@ -165,7 +164,7 @@ def graphviz_test(metadict_friends):
         # Выделяем трипфагов двойной обводкой:
         if trip is not None:
             dot.node(node_name, color=hsv_border, fillcolor=hsv_fill, fontsize=font_strength,\
-                    width=node_strength, penwidth=node_strength, shape='doublecircle')
+                    width=node_strength, penwidth=node_strength)
         else:
             dot.node(node_name, color=hsv_border, fillcolor=hsv_fill, fontsize=font_strength,\
                     width=node_strength, penwidth=node_strength)
@@ -186,7 +185,7 @@ def graphviz_test(metadict_friends):
             # А вес связи, это доля от общего числа постов, предназначенная другу:
             connect_value = str(round(score,2))
             dot.edge(node_name, friend_name, color=hsv, penwidth=connect_value)
-    # Вывод данных в формате dor:
+    # Вывод данных в формате dot:
     print(dot.source)
     # Генерация схемы:
     img = metadict_path(IMG)
