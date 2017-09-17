@@ -8,7 +8,7 @@
 Скрипты проверялись только на GNU/Linux.  
 `git clone https://github.com/Shadybloom/synch-profiler`  
 Нужен питон третьей версии, например Python 3.6.2, а также sqlite3. Для вывода графа социальных связей используется graphviz:  
-`sudo apt-get update && sudo apt-get install python3.6 sqlite3 graphviz`
+`sudo apt-get update && sudo apt-get install python3.6 sqlite3 graphviz`  
 Кроме того понадобятся внешние библиотеки Python (можно установить в каталог пользователя):  
 `pip install --user beautifulsoup4 pymorphy2 graphviz`  
 
